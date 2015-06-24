@@ -162,6 +162,7 @@ object Kafka2Spark {
         hc.jsonRDD(rdd, schema).registerTempTable("vds")
         hc.sql(sql_visit)
         hc.sql(sql_page)
+        hc.sql(sql_action)
         hc.sql(sql_action_total)
 
         def matchRule(rule: Rule, row: Row): Boolean = {

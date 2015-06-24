@@ -1,7 +1,5 @@
 package com.growing
 
-import java.sql.DriverManager
-
 import kafka.serializer.StringDecoder
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.JoinedRow4
@@ -14,17 +12,17 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import com.growing.common._
 
 
 object Kafka2Spark {
 
   def main(args: Array[String]): Unit = {
     val sc = new SparkContext(new SparkConf().setAppName("kakfa2spark"))
+    val ac = new AppContext(args(0))
 
-
-
-    val brokers = "kafka-0:9092,kafka-1:9092"
-    val topic = "vds-pc-web,vds-pc-mobile"
+    val brokers = ac.properties.getOrElse("kafka.brokers", "")
+    val topic = ac.properties.getOrElse("kafka.topic", "")
 
     val sql_visit = """
                       |INSERT INTO TABLE liepin.visit partition (day)
@@ -100,51 +98,54 @@ object Kafka2Spark {
 
       val start_time = System.currentTimeMillis()
       val sql_rule = "select d,p,q,t,x,v,uid,name from test order by d,p,q,x,v,t"
-      Class.forName("org.postgresql.Driver")
-      val connection = DriverManager.getConnection("jdbc:postgresql://pgdb:7531/rules","apps","O|EUc8uQ:>F33TyJ")
-      val res = connection.createStatement().executeQuery(sql_rule)
+
 
       val root = mutable.Buffer[Node]()
-      while (res.next()) {
 
-        var currentNode = root
-        var findLeaf = false
-        val rules = ArrayBuffer[Rule]()
+      ac.executeSql(sql_rule) { res =>
+        while (res.next()) {
 
-        Seq(2, 7, 9, 12, 17, 15).zipWithIndex.reverse.foreach { case (s, i) =>
-          val col = res.getString(i + 1)
-          if (col == null || col == "") {
-            if (findLeaf) rules.append(Rule("", s, ""))
-          } else {
-            val index = col.indexOf(":")
-            if( index == -1) throw new Exception("error rule format")
-            findLeaf = true
-            rules.append(Rule(col.substring(0,index), s, col.substring(index+1)))
-          }
-        }
+          var currentNode = root
+          var findLeaf = false
+          val rules = ArrayBuffer[Rule]()
 
-        val ruleIter = rules.reverseIterator
-        ruleIter.foreach { rule =>
-          val child =
-            if (ruleIter.hasNext) MidNode(rule, mutable.Buffer[Node]())
-            else LeafNode(rule, Tag(res.getString(7), res.getString(8)))
-
-          if (currentNode.isEmpty) currentNode.append(child)
-          else {
-            (currentNode.last, child) match {
-              case (MidNode(Rule(tp1, _, v1), _), MidNode(Rule(tp2, _, v2), _)) =>
-                if (tp1 != tp2 || v1 != v2) currentNode.append(child)
-              case _ => currentNode.append(child)
+          Seq(2, 7, 9, 12, 17, 15).zipWithIndex.reverse.foreach { case (s, i) =>
+            val col = res.getString(i + 1)
+            if (col == null || col == "") {
+              if (findLeaf) rules.append(Rule("", s, ""))
+            } else {
+              val index = col.indexOf(":")
+              if( index == -1) throw new Exception("error rule format")
+              findLeaf = true
+              rules.append(Rule(col.substring(0,index), s, col.substring(index+1)))
             }
           }
-          currentNode = currentNode.last match {
-            case MidNode(_, children) => children
-            case LeafNode(_,_,children) => children
+
+          val ruleIter = rules.reverseIterator
+          ruleIter.foreach { rule =>
+            val child =
+              if (ruleIter.hasNext) MidNode(rule, mutable.Buffer[Node]())
+              else LeafNode(rule, Tag(res.getString(7), res.getString(8)))
+
+            if (currentNode.isEmpty) currentNode.append(child)
+            else {
+              (currentNode.last, child) match {
+                case (MidNode(Rule(tp1, _, v1), _), MidNode(Rule(tp2, _, v2), _)) =>
+                  if (tp1 != tp2 || v1 != v2) currentNode.append(child)
+                case _ => currentNode.append(child)
+              }
+            }
+            currentNode = currentNode.last match {
+              case MidNode(_, children) => children
+              case LeafNode(_,_,children) => children
+            }
           }
         }
+        res.close()
       }
+
+
       println("find rule use:" + (System.currentTimeMillis() - start_time) + "ms")
-//      println("rule tree: " + root.toList)
       root.toList
     }
 
@@ -214,8 +215,7 @@ object Kafka2Spark {
         }
 
         hc.createDataFrame(ac, StructType(fields_action_tag.map(StructField(_, StringType)))).registerTempTable("act")
-        hc.sql("desc act").collect().foreach(println)
-//        hc.sql("select * from act limit 10").collect().foreach(println)
+
         hc.sql(sql_action_tag)
 
       }

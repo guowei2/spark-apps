@@ -21,6 +21,8 @@ object Kafka2Spark {
   def main(args: Array[String]): Unit = {
     val sc = new SparkContext(new SparkConf().setAppName("kakfa2spark"))
 
+
+
     val brokers = "kafka-0:9092,kafka-1:9092"
     val topic = "vds-pc-web,vds-pc-mobile"
 

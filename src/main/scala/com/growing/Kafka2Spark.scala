@@ -77,7 +77,7 @@ object Kafka2Spark {
                            |INSERT INTO TABLE liepin.action_tag partition (day, time)
                            |SELECT `id` ,`c` ,`d` ,`gi` ,
                            |`h` ,`i` ,`idx` , `p` , `page_id` ,`q` ,
-                           |`s` ,substr(stm,0,10) , `t` ,`tm` , `u` ,`v` ,`visit_id` , `x`, tag_id, tag_name
+                           |`s` ,`stm` , `t` ,`tm` , `u` ,`v` ,`visit_id` , `x`, tag_id, tag_name
                            |from_unixtime(cast(substr(stm,0,10) AS int),"yyyyMMdd") ,
                            |substr(from_unixtime(cast(substr(stm,0,10) AS int),"HHmm"),0,3)
                            |from act

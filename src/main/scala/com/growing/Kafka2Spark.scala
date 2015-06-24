@@ -74,7 +74,7 @@ object Kafka2Spark {
       ,"s" ,"stm" , "t" ,"tm" , "u" ,"v","visit_id" , "x", "tag_id", "tag_name")
 
     val sql_action_tag = """
-                           |INSERT INTO TABLE liepin.action_total partition (day, time)
+                           |INSERT INTO TABLE liepin.action_tag partition (day, time)
                            |SELECT `_id` ,`c` ,`d` ,`gi` ,
                            |`h` ,`i` ,`idx` , `p` , `page_id` ,`q` ,
                            |`s` ,substr(stm,0,10) , `t` ,`tm` , `u` ,`v` ,`visit_id` , `x`, tag_id, tag_name

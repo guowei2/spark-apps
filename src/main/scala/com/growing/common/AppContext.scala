@@ -35,10 +35,10 @@ class AppContext(args: Array[String]) {
   }
 
   def executeSql(sql: String) (f: ResultSet => Unit) = {
-    Class.forName(properties.getOrElse("driver", "org.postgresql.Driver"))
-    val url = properties.getOrElse("url", "jdbc:postgresql://localhost:7531/rules")
-    val user = properties.getOrElse("user", "test")
-    val password = properties.getOrElse("password", "test")
+    Class.forName(properties.getOrElse("db.driver", "org.postgresql.Driver"))
+    val url = properties.getOrElse("db.url", "jdbc:postgresql://localhost:7531/rules")
+    val user = properties.getOrElse("db.user", "test")
+    val password = properties.getOrElse("db.password", "test")
 
     var connection: Connection = null
     try {

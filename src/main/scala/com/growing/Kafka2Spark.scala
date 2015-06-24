@@ -48,7 +48,6 @@ object Kafka2Spark {
                    """.stripMargin
 
     val sql_action = """
-                       |CREATE TEMPORARY TABLE ac AS
                        |SELECT `_id` ,`c` ,`d` ,`gi` ,
                        |`h` ,`i` ,`idx` , `p` , `page_id` ,`q` ,
                        |`s` ,`stm` , `t` ,`tm` , `u` ,`v` ,`visit_id` , `x`
@@ -162,7 +161,7 @@ object Kafka2Spark {
         hc.jsonRDD(rdd, schema).registerTempTable("vds")
         hc.sql(sql_visit)
         hc.sql(sql_page)
-        hc.sql(sql_action)
+        hc.sql(sql_action).registerTempTable("ac")
         hc.sql(sql_action_total)
 
         def matchRule(rule: Rule, row: Row): Boolean = {

@@ -214,7 +214,7 @@ object Kafka2Spark {
         }
 
         hc.createDataFrame(ac, StructType(fields_action_tag.map(StructField(_, StringType)))).registerTempTable("act")
-//        hc.sql("desc act").collect().foreach(println)
+        hc.sql("desc act").collect().foreach(println)
 //        hc.sql("select * from act limit 10").collect().foreach(println)
         hc.sql(sql_action_tag)
 

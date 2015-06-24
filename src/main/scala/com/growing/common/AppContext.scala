@@ -8,11 +8,15 @@ import scala.collection.JavaConversions._
 import org.apache.spark.SparkException
 
 
-class AppContext(file: String) {
+class AppContext(args: Array[String]) {
 
   val properties: Map[String, String] = {
 
-    val filename = ""
+    if(args.length < 1) {
+      System.err.println("Usage args FILE")
+      System.exit(1)
+    }
+    val filename = args(0)
     val file = new File(filename)
     require(file.exists(), s"Properties file $file does not exist")
     require(file.isFile(), s"Properties file $file is not a normal file")

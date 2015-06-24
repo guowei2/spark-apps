@@ -19,7 +19,7 @@ object Kafka2Spark {
 
   def main(args: Array[String]): Unit = {
     val sc = new SparkContext(new SparkConf().setAppName("kakfa2spark"))
-    val ac = new AppContext(args(0))
+    val ac = new AppContext(args)
 
     val brokers = ac.properties.getOrElse("kafka.brokers", "")
     val topic = ac.properties.getOrElse("kafka.topic", "")
